@@ -5,8 +5,8 @@
         <h1>Ticket Management System</h1>
         <p>Streamline your support workflow with our powerful ticket management platform.</p>
         <div class="cta-buttons">
-          <router-link to="/auth" class="btn btn-primary">Login</router-link>
-          <router-link to="/auth" class="btn btn-secondary">Get Started</router-link>
+          <router-link to="/auth" class="btn btn-primary">LOGIN</router-link>
+          <router-link to="/auth" class="btn btn-secondary">GET STARTED</router-link>
         </div>
       </div>
     </div>
@@ -34,7 +34,7 @@
   </div>
   <footer class="footer">
     <div class="container">
-      <p>&copy; 2023 Ticket Management System. All rights reserved.</p>
+      <p>&copy; 2025 Ticket Management System. All rights reserved.</p>
     </div>
   </footer>
 </template>

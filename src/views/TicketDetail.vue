@@ -1,80 +1,53 @@
 <template>
   <div class="container">
     <div class="section">
-      <h2>Ticket Management</h2>
-      <button @click="showCreateForm = !showCreateForm" class="btn btn-primary">
-        {{ showCreateForm ? 'Cancel' : 'Create New Ticket' }}
-      </button>
+      <div class="ticket-detail-header">
+        <router-link to="/tickets" class="btn btn-outline back-btn">
+          ← Back to Tickets
+        </router-link>
+        <h2>Ticket Details</h2>
+      </div>
 
-      <form v-if="showCreateForm" @submit.prevent="createTicket" class="card ticket-form" style="margin-top: 20px;">
-        <div class="form-header">
-          <h3>Create New Ticket</h3>
-          <p class="form-description">Fill in the details below to create a new support ticket.</p>
-        </div>
-
-        <div class="form-grid">
-          <InputField
-            id="title"
-            v-model="newTicket.title"
-            label="Ticket Title *"
-            placeholder="Enter ticket title"
-            required
-            maxlength="100"
-            :error-message="errors.title"
-          />
-
-          <SelectField
-            id="status"
-            v-model="newTicket.status"
-            label="Status *"
-            placeholder="Select status"
-            required
-            :options="statusOptions"
-            :error-message="errors.status"
-          />
-
-          <SelectField
-            id="priority"
-            v-model="newTicket.priority"
-            label="Priority"
-            placeholder="Select priority"
-            :options="priorityOptions"
-          />
-        </div>
-
-        <TextareaField
-          id="description"
-          v-model="newTicket.description"
-          label="Description"
-          placeholder="Provide detailed information about your issue..."
-          rows="4"
-          maxlength="500"
-        />
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-            <span v-if="isSubmitting" class="spinner small"></span>
-            {{ isSubmitting ? 'Creating...' : 'Create Ticket' }}
-          </button>
-          <button type="button" @click="cancelCreate" class="btn btn-outline">Cancel</button>
-        </div>
-      </form>
-
-      <div class="grid" style="margin-top: 20px;">
-        <div v-for="ticket in tickets" :key="ticket.id" class="card">
+      <div v-if="ticket" class="card ticket-detail">
+        <div class="ticket-header">
           <h3>{{ ticket.title }}</h3>
-          <p>{{ ticket.description }}</p>
-          <p>Status: <span :class="'status-' + ticket.status">{{ ticket.status }}</span></p>
-          <p>Priority: {{ ticket.priority }}</p>
-          <div style="margin-top: 10px;">
-            <router-link :to="`/tickets/${ticket.id}`" class="btn btn-primary">View</router-link>
-            <button @click="editTicket(ticket)" class="btn btn-secondary">Edit</button>
-            <button @click="deleteTicket(ticket.id)" class="btn btn-secondary">Delete</button>
+          <div class="ticket-meta">
+            <span :class="'status-' + ticket.status" class="status-badge">{{ ticket.status }}</span>
+            <span class="priority-badge">{{ ticket.priority }}</span>
           </div>
+        </div>
+
+        <div class="ticket-body">
+          <div class="ticket-description">
+            <h4>Description</h4>
+            <p>{{ ticket.description || 'No description provided.' }}</p>
+          </div>
+
+          <div class="ticket-info">
+            <div class="info-item">
+              <strong>ID:</strong> {{ ticket.id }}
+            </div>
+            <div class="info-item">
+              <strong>Status:</strong> {{ ticket.status }}
+            </div>
+            <div class="info-item">
+              <strong>Priority:</strong> {{ ticket.priority }}
+            </div>
+          </div>
+        </div>
+
+        <div class="ticket-actions">
+          <button @click="editTicket" class="btn btn-primary">Edit Ticket</button>
+          <button @click="deleteTicket" class="btn btn-danger">Delete Ticket</button>
         </div>
       </div>
 
-      <!-- Edit Modal -->
+      <div v-else class="card">
+        <p>Ticket not found.</p>
+        <router-link to="/tickets" class="btn btn-primary">Back to Tickets</router-link>
+      </div>
+
+      <!-- Edit Modal (similar to Tickets.vue) -->
       <div v-if="editingTicket" class="modal" @click="closeEdit">
         <div class="modal-content" @click.stop>
           <button class="modal-close" @click="closeEdit" aria-label="Close modal">&times;</button>
@@ -139,13 +112,13 @@
 </template>
 
 <script>
-import { getTickets, createTicket as create, updateTicket as update, deleteTicket as del } from '../utils/tickets'
+import { getTickets, updateTicket as update, deleteTicket as del } from '../utils/tickets'
 import InputField from '../components/InputField.vue'
 import SelectField from '../components/SelectField.vue'
 import TextareaField from '../components/TextareaField.vue'
 
 export default {
-  name: 'TicketsView',
+  name: 'TicketDetail',
   components: {
     InputField,
     SelectField,
@@ -153,16 +126,9 @@ export default {
   },
   data() {
     return {
-      tickets: [],
-      showCreateForm: false,
-      isSubmitting: false,
-      newTicket: {
-        title: '',
-        description: '',
-        status: '',
-        priority: ''
-      },
+      ticket: null,
       editingTicket: null,
+      isSubmitting: false,
       errors: {},
       statusOptions: [
         { value: 'open', label: 'Open' },
@@ -177,11 +143,16 @@ export default {
     }
   },
   mounted() {
-    this.loadTickets()
+    this.loadTicket()
+  },
+  watch: {
+    '$route.params.id': 'loadTicket'
   },
   methods: {
-    loadTickets() {
-      this.tickets = getTickets()
+    loadTicket() {
+      const id = parseInt(this.$route.params.id)
+      const tickets = getTickets()
+      this.ticket = tickets.find(t => t.id === id) || null
     },
     validateTicket(ticket) {
       this.errors = {}
@@ -193,33 +164,8 @@ export default {
       }
       return Object.keys(this.errors).length === 0
     },
-    createTicket() {
-      if (!this.validateTicket(this.newTicket)) return
-
-      this.isSubmitting = true
-
-      try {
-        create(this.newTicket)
-        this.showToast('success', 'Ticket created successfully')
-        this.resetNewTicket()
-        this.showCreateForm = false
-        this.loadTickets()
-      } catch (error) {
-        this.showToast('error', 'Failed to create ticket')
-      } finally {
-        this.isSubmitting = false
-      }
-    },
-    cancelCreate() {
-      this.resetNewTicket()
-      this.showCreateForm = false
-      this.errors = {}
-    },
-    resetNewTicket() {
-      this.newTicket = { title: '', description: '', status: '', priority: '' }
-    },
-    editTicket(ticket) {
-      this.editingTicket = { ...ticket }
+    editTicket() {
+      this.editingTicket = { ...this.ticket }
       this.errors = {}
     },
     updateTicket() {
@@ -231,19 +177,19 @@ export default {
         update(this.editingTicket.id, this.editingTicket)
         this.showToast('success', 'Ticket updated successfully')
         this.closeEdit()
-        this.loadTickets()
+        this.loadTicket() // Reload to reflect changes
       } catch (error) {
         this.showToast('error', 'Failed to update ticket')
       } finally {
         this.isSubmitting = false
       }
     },
-    deleteTicket(id) {
+    deleteTicket() {
       if (confirm('Are you sure you want to delete this ticket?')) {
         try {
-          del(id)
+          del(this.ticket.id)
           this.showToast('success', 'Ticket deleted successfully')
-          this.loadTickets()
+          this.$router.push('/tickets')
         } catch (error) {
           this.showToast('error', 'Failed to delete ticket')
         }
@@ -264,6 +210,85 @@ export default {
 </script>
 
 <style scoped>
+.ticket-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.back-btn {
+  margin: 0;
+}
+
+.ticket-detail {
+  max-width: 800px;
+}
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.ticket-header h3 {
+  margin: 0;
+  flex: 1;
+}
+
+.ticket-meta {
+  display: flex;
+  gap: 10px;
+}
+
+.status-badge, .priority-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-open { background-color: #e3f2fd; color: #1976d2; }
+.status-in_progress { background-color: #fff3e0; color: #f57c00; }
+.status-closed { background-color: #e8f5e8; color: #388e3c; }
+
+.priority-badge {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.ticket-body {
+  margin-bottom: 20px;
+}
+
+.ticket-description h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+
+.ticket-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.info-item {
+  padding: 10px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.ticket-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Modal styles (copied from Tickets.vue) */
 .modal {
   position: fixed;
   top: 0;
