@@ -12,6 +12,8 @@
   --info-color: #17a2b8;
 
   --bg-color: #fafafa;
+  --bg-pattern-primary: rgba(74, 144, 226, 0.03);
+  --bg-pattern-secondary: rgba(255, 107, 107, 0.03);
   --card-bg: #ffffff;
   --text-color: #333333;
   --text-muted: #6c757d;
@@ -34,6 +36,8 @@
 
   /* Dark mode variables */
   --dark-bg-color: #1a1a1a;
+  --dark-bg-pattern-primary: rgba(74, 144, 226, 0.1);
+  --dark-bg-pattern-secondary: rgba(255, 107, 107, 0.1);
   --dark-card-bg: #2d2d2d;
   --dark-text-color: #e0e0e0;
   --dark-text-muted: #a0a0a0;
@@ -45,6 +49,8 @@
 /* Dark mode */
 [data-theme="dark"] {
   --bg-color: var(--dark-bg-color);
+  --bg-pattern-primary: var(--dark-bg-pattern-primary);
+  --bg-pattern-secondary: var(--dark-bg-pattern-secondary);
   --card-bg: var(--dark-card-bg);
   --text-color: var(--dark-text-color);
   --text-muted: var(--dark-text-muted);
@@ -57,6 +63,13 @@ body {
   margin: 0;
   font-family: var(--font-family);
   background-color: var(--bg-color);
+  background-image:
+    radial-gradient(circle at 20% 80%, var(--bg-pattern-primary) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, var(--bg-pattern-secondary) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, var(--bg-pattern-primary) 0%, transparent 50%);
+  background-size: 400px 400px, 300px 300px, 500px 500px;
+  background-position: 0% 0%, 100% 0%, 50% 100%;
+  background-repeat: no-repeat;
   color: var(--text-color);
   line-height: 1.6;
 }
@@ -71,6 +84,14 @@ body {
 .hero {
   position: relative;
   background: linear-gradient(135deg, var(--primary-color) 0%, #764ba2 50%, var(--accent-color) 100%);
+  background-image:
+    linear-gradient(135deg, var(--primary-color) 0%, #764ba2 50%, var(--accent-color) 100%),
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  background-size: cover, 300px 300px, 400px 400px, 500px 500px;
+  background-position: center, 0% 0%, 100% 0%, 50% 100%;
+  background-repeat: no-repeat;
   color: white;
   padding: calc(var(--spacing-xxl) + 40px) 0;
   overflow: hidden;
